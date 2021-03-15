@@ -1,0 +1,73 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   
+   "Description": "Creates SQS queues for different environments",
+   
+    "Parameters": {
+        "Environment": {
+            "Description": "Environment in which to manage queues",
+            "Type": "String",
+            "Default": "Test",
+            "AllowedValues": [ "Live", "Stage", "Test"]
+        }
+    },
+
+   "Resources": {
+      "ThirdPartySQSQueue": {
+         "Properties": {
+            "QueueName": {
+                    "Fn::Join": ["-", ["thirdparty_sqs", {
+                        "Ref": "Environment"
+                    }]]
+                }
+         "Type": "AWS::SQS::Queue"
+         }
+      },
+	  "ThirdPartyUser" : {
+	   "Type" : "AWS::IAM::User",
+	   "Properties" : {
+	      "Policies" : [ {
+	         "PolicyName" : "access-to-thirdpartyqueue-policy",
+	         "PolicyDocument" : {
+	            "Version": "2012-10-17",
+	            "Statement" : [ {
+	               "Effect" : "Allow",
+	               "Action" : [ "sqs:*" ],
+	               "Resource" : [ { "Ref" : "ThirdPartySQSQueue" } ]
+	            }, {
+	               "Effect" : "Deny",
+	               "Action" : [ "sns:*" ],
+	               "NotResource" : [ { "Ref" : "ThirdPartySQSQueue" } ]
+	            } ]
+	         }
+	      } ]
+	   }
+	}
+	  
+   "Outputs": {
+      "QueueName": {
+         "Description": "The name of the queue",
+         "Value": {
+            "Fn::GetAtt": [
+               "MyQueue",
+               "QueueName"
+            ]
+         }
+      },
+      "QueueURL": {
+         "Description": "The URL of the queue",
+         "Value": {
+            "Ref": "MyQueue"
+         }
+      },
+      "QueueARN": {
+         "Description": "The ARN of the queue",
+         "Value": {
+            "Fn::GetAtt": [
+               "MyQueue",
+               "Arn"
+            ]
+         }
+      }
+   }
+}
